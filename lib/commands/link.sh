@@ -2,7 +2,12 @@
 
 function symlink {
 	[[ ! $1 ]] && help symlink
-	local castle=$1
+	dryrun=
+	if $DRYRUN; then
+		echo -e "Running a dry-run.\n"
+		dryrun=echo
+	fi
+  local castle=$1
 	castle_exists 'link' "$castle"
 	# repos is a global variable
 	# shellcheck disable=SC2154
@@ -36,10 +41,10 @@ function symlink {
 				# $homepath is an absolute symlink to $repopath
 				if [[ -d $repopath && ! -L $repopath ]]; then
 					# $repopath is a directory, but $homepath is a symlink -> legacy handling.
-					rm "$homepath"
+					$dryrun rm "$homepath"
 				else
 					# replace it with a relative symlink
-					rm "$homepath"
+					$dryrun rm "$homepath"
 				fi
 			else
 				# $homepath does not symlink to $repopath
@@ -59,15 +64,18 @@ function symlink {
 					prompt_no 'conflict' "$relpath exists" "overwrite?" || continue
 				fi
 				# Delete $homepath.
-				rm -rf "$homepath"
+				$dryrun rm -rf "$homepath"
 			fi
 		fi
 
 		if [[ ! -d $repopath || -L $repopath ]]; then
 			# $repopath is not a real directory so we create a symlink to it
 			pending 'symlink' "$relpath"
-			ln -s "$rel_repopath" "$homepath"
+			$dryrun ln -s "$rel_repopath" "$homepath"
 		else
+			if [ "$DRYRUN" = true ]; then
+				echo "Despite dry-run, creating folder : mkdir $homepath"
+			fi
 			pending 'directory' "$relpath"
 			mkdir "$homepath"
 		fi

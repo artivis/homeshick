@@ -33,7 +33,7 @@ function help_err {
 }
 
 function status {
-	if $TALK; then
+	if [ "$TALK" = true ]; then
 		printf "$1%13s$txtdef %s\n" "$2" "$3"
 	fi
 }
@@ -51,8 +51,13 @@ pending_message=''
 function pending {
 	pending_status="$1"
 	pending_message="$2"
-	if $TALK; then
-		printf "$bldcyn%13s$txtdef %s" "$pending_status" "$pending_message"
+	if [ "$TALK" = true ]; then
+		# If we are running dry, avoid duplicate
+		if [ "$DRYRUN" = false ]; then
+			printf "$bldcyn%13s$txtdef %s" "$pending_status" "$pending_message"
+		else
+			unset pending_status pending_message
+		fi
 	fi
 }
 
